@@ -1,0 +1,19 @@
+# Build artifacts
+/dist/
+/build/
+*.spec.bak
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# macOS
+.DS_Store
+
+# Local case data never lives in the repo (it is under ~/.casework), but guard
+# against an accidental copy being added here.
+/cases/
