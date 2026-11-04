@@ -121,6 +121,6 @@ app = BUNDLE(
         "NSHighResolutionCapable": True,
         "LSUIElement": False,
         "NSRequiresAquaSystemAppearance": False,
-        "NSHumanReadableCopyright": "For authorised investigative use. Runs locally.",
+        "NSHumanReadableCopyright": "Copyright (c) 2026 Sovereign Edge Inc. MIT licensed. For authorised investigative use; runs locally.",
     },
 )
