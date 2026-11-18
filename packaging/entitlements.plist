@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Hardened-runtime entitlements for notarising the PyInstaller bundle.
+
+  A frozen Python app is the awkward case for the hardened runtime: the
+  bundle ships dozens of third-party .dylib/.so files (OpenCV, numpy, scipy,
+  the CPython extensions) that are NOT signed by this Developer ID. Under the
+  hardened runtime the loader refuses those by default and the app dies at
+  launch with a code-signing error rather than a Python traceback.
+
+  disable-library-validation lifts exactly that restriction and no other, so
+  the bundle's own libraries load while the runtime's other protections stay
+  on. allow-unsigned-executable-memory is what CPython's bytecode execution
+  and ctypes need; without it some C extensions crash under the runtime.
+
+  Nothing here grants network, disk or device access -- outbound HTTPS from a
+  client and a loopback server need no entitlement.
+-->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+</dict>
+</plist>
