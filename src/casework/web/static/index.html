@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>casework</title>
+<style>
+:root{
+  --bg:#fbfaf8; --panel:#ffffff; --panel-2:#f5f4f1; --line:#e5e2dc;
+  --ink:#1b1c1e; --ink-2:#5c5f66; --ink-3:#8b8f97;
+  --accent:#2f5fbf; --accent-soft:#eaf0fd;
+  --ok:#1f7a4d; --ok-soft:#e6f4ec;
+  --warn:#8a6100; --warn-soft:#fdf1d8;
+  --bad:#a52626; --bad-soft:#fbeaea;
+  --radius:9px; --shadow:0 1px 2px rgba(20,20,25,.05),0 4px 14px rgba(20,20,25,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141518; --panel:#1c1e22; --panel-2:#22252a; --line:#2e3238;
+    --ink:#e9e8e5; --ink-2:#a2a6ad; --ink-3:#767b83;
+    --accent:#7aa2f0; --accent-soft:#1d2738;
+    --ok:#5fc38d; --ok-soft:#14291f;
+    --warn:#e0b45c; --warn-soft:#2b2415;
+    --bad:#ef7d7d; --bad-soft:#301a1a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.5 ui-sans-serif,-apple-system,"SF Pro Text","Segoe UI",Inter,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent);text-decoration:none}
+.app{display:grid;grid-template-columns:270px 1fr;height:100vh}
+
+/* ---------- rail ---------- */
+.rail{
+  background:var(--panel);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;overflow-y:auto;
+}
+.brand{
+  padding:16px 18px 12px;border-bottom:1px solid var(--line);
+  display:flex;align-items:baseline;gap:8px;
+}
+.brand b{font-size:15px;letter-spacing:-.01em}
+.brand span{font-size:11px;color:var(--ink-3)}
+.rail section{padding:14px 16px;border-bottom:1px solid var(--line)}
+.rail h3{
+  margin:0 0 9px;font-size:10.5px;font-weight:650;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);
+}
+.pill-list{display:flex;flex-direction:column;gap:3px}
+.pill{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:7px 9px;border-radius:7px;cursor:pointer;border:1px solid transparent;
+}
+.pill:hover{background:var(--panel-2)}
+.pill.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 25%,transparent)}
+.pill .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill .count{font-variant-numeric:tabular-nums;font-size:12px;color:var(--ink-3)}
+.actions{display:flex;flex-direction:column;gap:6px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:8px 12px;border-radius:7px;border:1px solid var(--line);
+  background:var(--panel-2);cursor:pointer;font-size:13px;transition:.12s;
+}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){filter:brightness(1.07);color:#fff}
+.btn.sm{padding:5px 9px;font-size:12px}
+
+/* ---------- main ---------- */
+main{display:flex;flex-direction:column;overflow:hidden}
+.topbar{
+  padding:14px 24px;border-bottom:1px solid var(--line);background:var(--panel);
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.topbar h1{margin:0;font-size:16px;font-weight:620;letter-spacing:-.01em}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  font-size:11.5px;font-weight:560;border:1px solid transparent;
+}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.mute{background:var(--panel-2);color:var(--ink-2);border-color:var(--line)}
+.tabs{display:flex;gap:2px;margin-left:auto}
+.tab{padding:6px 13px;border-radius:7px;cursor:pointer;color:var(--ink-2);font-size:13px}
+.tab:hover{background:var(--panel-2)}
+.tab.on{background:var(--panel-2);color:var(--ink);font-weight:560}
+.view{flex:1;overflow-y:auto;padding:22px 24px 60px}
+
+/* ---------- clusters ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:14px}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;cursor:pointer;transition:.14s;box-shadow:var(--shadow);
+}
+.card:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft),var(--shadow)}
+.card .face{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--panel-2)}
+.card .meta{padding:10px 11px}
+.card .who{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:6px}
+.card .who.unknown{color:var(--ink-3);font-weight:500;font-style:italic}
+.card .sub{margin-top:3px;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.bar{height:3px;background:var(--panel-2)}
+.bar>i{display:block;height:100%;background:var(--accent)}
+
+/* ---------- detail ---------- */
+.detail{display:grid;grid-template-columns:1fr 340px;gap:20px}
+.facegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px}
+.facegrid img{
+  width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;
+  border:1px solid var(--line);background:var(--panel-2);
+}
+.side{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px;height:fit-content;position:sticky;top:0;box-shadow:var(--shadow);
+}
+.side h4{margin:0 0 10px;font-size:13px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12.5px;margin-bottom:14px}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+select,input[type=text],input[type=url],input[type=date],input[type=number],textarea{
+  width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:7px;
+  background:var(--bg);margin-bottom:8px;
+}
+textarea{min-height:64px;resize:vertical}
+label{display:block;font-size:11.5px;color:var(--ink-3);margin-bottom:3px}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{
+  text-align:left;font-weight:600;color:var(--ink-3);font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.07em;padding:0 10px 7px;
+}
+td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+tbody tr:hover{background:var(--panel)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
+
+/* ---------- misc ---------- */
+.empty{
+  text-align:center;padding:70px 20px;color:var(--ink-3);max-width:520px;margin:0 auto;
+}
+.empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:7px}
+.note{
+  background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:7px;padding:11px 14px;font-size:12.5px;color:var(--ink-2);margin-bottom:18px;
+}
+.note.warn{border-left-color:var(--warn)}
+.note.bad{border-left-color:var(--bad)}
+.log{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px;max-height:230px;overflow-y:auto;font-family:ui-monospace,Menlo,monospace;
+  font-size:11.5px;line-height:1.65;
+}
+.log .ev{display:inline-block;width:66px;color:var(--ink-3)}
+.log .refused{color:var(--warn)}
+.log .failed{color:var(--bad)}
+.log .done{color:var(--ok)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.spacer{flex:1}
+h2.sec{font-size:14px;margin:26px 0 12px;font-weight:620}
+h2.sec:first-child{margin-top:0}
+dialog{
+  border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);
+  padding:20px;width:min(460px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+dialog::backdrop{background:rgba(10,10,12,.45)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand"><b>casework</b><span>scoped collection</span></div>
+    <section>
+      <h3>Cases</h3>
+      <div class="pill-list" id="caseList"></div>
+      <button class="btn sm" style="margin-top:8px;width:100%" onclick="showNewCase()">New case</button>
+    </section>
+    <section id="subjectsPane" hidden>
+      <h3>Subjects</h3>
+      <div class="pill-list" id="subjectList"></div>
+      <button class="btn sm" style="margin-top:8px;width:100%" onclick="showNewSubject()">Add subject</button>
+    </section>
+    <section id="pipelinePane" hidden>
+      <h3>Pipeline</h3>
+      <div class="actions">
+        <button class="btn" id="btnCrawl" onclick="runCrawl()">1 · Collect</button>
+        <button class="btn" id="btnFaces" onclick="runFaces()">2 · Detect faces</button>
+        <button class="btn" id="btnCluster" onclick="runCluster()">3 · Cluster</button>
+        <button class="btn" id="btnMatch" onclick="runMatch()">4 · Match subjects</button>
+        <button class="btn" onclick="runReport()">Export report</button>
+      </div>
+    </section>
+    <section id="modelPane" hidden>
+      <h3>Models</h3>
+      <div id="modelStatus"></div>
+    </section>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <h1 id="caseTitle">No case selected</h1>
+      <span id="authChip"></span>
+      <div class="tabs" id="tabs" hidden>
+        <div class="tab on" data-view="clusters">People</div>
+        <div class="tab" data-view="sources">Sources</div>
+        <div class="tab" data-view="graph">Connections</div>
+        <div class="tab" data-view="audit">Audit</div>
+      </div>
+    </div>
+    <div class="view" id="view">
+      <div class="empty">
+        <b>Select or create a case</b>
+        Every case carries an authorisation, and every source you collect from
+        must be attributed to a subject you have already identified.
+      </div>
+    </div>
+  </main>
+</div>
+
+<dialog id="modal"><div id="modalBody"></div></dialog>
+
+<script>
+const $ = (s,r=document)=>r.querySelector(s);
+const el = (t,a={},...kids)=>{
+  const n=document.createElement(t);
+  for(const [k,v] of Object.entries(a)){
+    if(k==='class') n.className=v;
+    else if(k==='html') n.innerHTML=v;
+    else if(k.startsWith('on')) n.addEventListener(k.slice(2),v);
+    else if(v!==null&&v!==undefined&&v!==false) n.setAttribute(k,v);
+  }
+  for(const kid of kids.flat()) if(kid!=null) n.append(kid.nodeType?kid:document.createTextNode(kid));
+  return n;
+};
+const api = async (path,opts)=>{
+  const r = await fetch(path,{headers:{'Content-Type':'application/json'},...opts});
+  const body = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(body.detail||`HTTP ${r.status}`);
+  return body;
+};
+
+let CASE=null, DATA=null, VIEW='clusters', CLUSTERS=[], SELECTED=null, PLATFORMS=[];
+
+/* ---------------- cases ---------------- */
+async function loadCases(){
+  const cases = await api('/api/cases');
+  const list = $('#caseList'); list.replaceChildren();
+  if(!cases.length) list.append(el('div',{class:'pill'},el('span',{class:'name'},'none yet')));
+  for(const c of cases){
+    list.append(el('div',{class:'pill'+(c.id===CASE?' on':''),onclick:()=>openCase(c.id)},
+      el('span',{class:'name'},c.title||c.id),
+      el('span',{class:'count'},String(c.artifacts))));
+  }
+  await loadModels();
+}
+
+async function loadModels(){
+  const m = await api('/api/models');
+  $('#modelPane').hidden=false;
+  const pane = $('#modelStatus'); pane.replaceChildren();
+  const missing = m.models.filter(x=>!x.cached);
+  if(!missing.length){
+    pane.append(el('span',{class:'chip ok'},'face models ready'));
+  }else{
+    pane.append(el('span',{class:'chip warn'},`${missing.length} model(s) missing`));
+    pane.append(el('button',{class:'btn sm',style:'margin-top:8px;width:100%',onclick:fetchModels},
+      'Download (39 MB)'));
+  }
+  if(m.offline) pane.append(el('div',{class:'chip mute',style:'margin-top:8px'},'network disabled'));
+}
+
+async function fetchModels(){
+  const {job} = await api('/api/models/fetch',{method:'POST'});
+  await pollJob(job,'Downloading models');
+  await loadModels();
+}
+
+async function openCase(id){
+  CASE=id; location.hash=id;
+  DATA = await api(`/api/case/${id}`);
+  $('#caseTitle').textContent = DATA.title;
+  const a = DATA.authorisation;
+  const cls = a.expired?'bad':(a.days_left<14?'warn':'ok');
+  const text = a.expired
+    ? `authorisation expired ${a.expires} — collection blocked`
+    : `${a.instrument} · ${a.days_left} days left`;
+  $('#authChip').replaceChildren(el('span',{class:'chip '+cls,title:a.scope_note||''},text));
+  $('#tabs').hidden=false;
+  $('#subjectsPane').hidden=false;
+  $('#pipelinePane').hidden=false;
+  $('#btnCrawl').disabled = a.expired;
+  $('#btnFaces').disabled = !DATA.models_ready;
+  $('#btnMatch').disabled = !DATA.models_ready;
+  renderSubjects();
+  await loadCases();
+  render();
+}
+
+function renderSubjects(){
+  const list=$('#subjectList'); list.replaceChildren();
+  if(!DATA.subjects.length){
+    list.append(el('div',{class:'pill'},el('span',{class:'name',style:'color:var(--ink-3)'},'none enrolled')));
+  }
+  for(const s of DATA.subjects){
+    list.append(el('div',{class:'pill',title:`${s.references} reference image(s)`},
+      el('span',{class:'name'},s.label),
+      el('span',{class:'count'},`${s.faces}`)));
+  }
+}
+
+/* ---------------- views ---------------- */
+$('#tabs').addEventListener('click',e=>{
+  const tab=e.target.closest('.tab'); if(!tab) return;
+  [...document.querySelectorAll('.tab')].forEach(t=>t.classList.toggle('on',t===tab));
+  VIEW=tab.dataset.view; SELECTED=null; render();
+});
+
+async function render(){
+  if(!CASE) return;
+  const v=$('#view');
+  if(VIEW==='clusters') return renderClusters(v);
+  if(VIEW==='sources') return renderSources(v);
+  if(VIEW==='graph') return renderGraph(v);
+  if(VIEW==='audit') return renderAudit(v);
+}
+
+async function renderClusters(v){
+  CLUSTERS = await api(`/api/case/${CASE}/clusters`);
+  v.replaceChildren();
+  if(!CLUSTERS.length){
+    v.append(el('div',{class:'empty'},
+      el('b',{},'No faces grouped yet'),
+      'Collect from an authorised source, run face detection, then cluster. '+
+      'Clusters are groups of faces that look like the same person — they are not identities '+
+      'until you or the matcher say so.'));
+    return;
+  }
+  if(SELECTED!==null) return renderClusterDetail(v,SELECTED);
+
+  const named=CLUSTERS.filter(c=>c.subject).length;
+  v.append(el('div',{class:'note'},
+    `${CLUSTERS.length} distinct people detected across the collection · `+
+    `${named} attributed to an enrolled subject · ${CLUSTERS.length-named} unidentified. `+
+    `Unidentified is a normal result: there is nothing to match against but the references you enrolled.`));
+
+  const grid=el('div',{class:'grid'});
+  for(const c of CLUSTERS){
+    const label = c.contested
+      ? el('div',{class:'who',style:'color:var(--warn)'},'contested')
+      : c.subject
+        ? el('div',{class:'who'},subjectLabel(c.subject))
+        : el('div',{class:'who unknown'},'unidentified');
+    grid.append(el('div',{class:'card',onclick:()=>{SELECTED=c.cluster;render();}},
+      el('img',{class:'face',loading:'lazy',src:`/api/case/${CASE}/thumb/${c.best_face}`}),
+      el('div',{class:'bar'},el('i',{style:`width:${Math.round(c.tightness*100)}%;background:${c.tightness<0.55?'var(--warn)':'var(--accent)'}`})),
+      el('div',{class:'meta'},label,
+        el('div',{class:'sub'},`${c.size} face${c.size===1?'':'s'} · ${c.artifacts} photo${c.artifacts===1?'':'s'} · cohesion ${c.tightness}`))));
+  }
+  v.append(grid);
+}
+
+function subjectLabel(id){
+  const s=(DATA.subjects||[]).find(s=>s.id===id);
+  return s?s.label:id;
+}
+
+async function renderClusterDetail(v,id){
+  const d = await api(`/api/case/${CASE}/cluster/${id}`);
+  const summary = CLUSTERS.find(c=>c.cluster===id)||{};
+  v.replaceChildren();
+  v.append(el('div',{class:'row'},
+    el('button',{class:'btn sm',onclick:()=>{SELECTED=null;render();}},'← All people'),
+    el('div',{class:'spacer'}),
+    el('span',{class:'chip mute'},`cluster ${id}`),
+    summary.contested?el('span',{class:'chip warn'},'contested by two subjects'):null,
+    (summary.tightness!==undefined&&summary.tightness<0.55)
+      ? el('span',{class:'chip warn'},'low cohesion — may contain two people'):null));
+
+  const left=el('div');
+  left.append(el('h2',{class:'sec'},`${d.faces.length} faces`));
+  const fg=el('div',{class:'facegrid'});
+  for(const f of d.faces) fg.append(el('img',{loading:'lazy',
+    src:`/api/case/${CASE}/thumb/${f.id}`,
+    title:`detection ${f.det_score}${f.match_score?` · match ${f.match_score}`:''}${f.manual?' · analyst-assigned':''}`}));
+  left.append(fg);
+
+  left.append(el('h2',{class:'sec'},'Where these came from'));
+  const rows=d.locations.map(loc=>el('tr',{},
+    el('td',{class:'mono'},loc.posted?loc.posted.slice(0,19).replace('T',' '):'—'),
+    el('td',{class:'mono'},loc.collected.replace('T',' ')),
+    el('td',{},el('a',{href:loc.url,target:'_blank',rel:'noreferrer noopener'},truncate(loc.url,64))),
+    el('td',{},loc.source_id),
+    el('td',{class:'mono'},loc.sha256.slice(0,12))));
+  left.append(el('table',{},
+    el('thead',{},el('tr',{},el('th',{},'posted'),el('th',{},'collected'),
+      el('th',{},'url'),el('th',{},'source'),el('th',{},'sha256'))),
+    el('tbody',{},rows)));
+  left.append(el('div',{class:'note',style:'margin-top:10px'},
+    'Posted time comes from the platform API where one was used. A dash means the '+
+    'page crawler collected it and no posting time is known — collection time is '+
+    'not a substitute.'));
+
+  const side=el('div',{class:'side'});
+  side.append(el('h4',{},'Analyst decision'));
+  side.append(el('div',{class:'note'},
+    'Your decision is recorded per face, so it survives re-clustering, and it overrides the matcher.'));
+  const sel=el('select',{id:'assignSel'},
+    el('option',{value:''},'— not any enrolled subject —'),
+    ...DATA.subjects.map(s=>el('option',{value:s.id,...(summary.subject===s.id?{selected:'selected'}:{})},s.label)));
+  side.append(el('label',{},'This cluster is'),sel);
+  side.append(el('label',{},'Reason (recorded in the audit log)'));
+  const reason=el('textarea',{id:'assignReason',placeholder:'e.g. matches exhibit 4; scar visible in three frames'});
+  side.append(reason);
+  side.append(el('button',{class:'btn primary',style:'width:100%',onclick:()=>assign(id)},'Record decision'));
+
+  side.append(el('h4',{style:'margin-top:20px'},'Cluster'));
+  const kv=el('dl',{class:'kv'});
+  for(const [k,val] of [['faces',d.faces.length],['photos',summary.artifacts??'—'],
+      ['cohesion',summary.tightness??'—'],['sources',(summary.sources||[]).join(', ')||'—']]){
+    kv.append(el('dt',{},k),el('dd',{},String(val)));
+  }
+  side.append(kv);
+
+  v.append(el('div',{class:'detail'},left,side));
+}
+
+async function assign(cluster){
+  const subject=$('#assignSel').value||null;
+  const reason=$('#assignReason').value.trim();
+  await api(`/api/case/${CASE}/assign`,{method:'POST',
+    body:JSON.stringify({cluster,subject_id:subject,reason})});
+  DATA = await api(`/api/case/${CASE}`);
+  renderSubjects(); SELECTED=null; render();
+}
+
+async function renderSources(v){
+  v.replaceChildren();
+  v.append(el('div',{class:'note'},
+    'A source authorises its own URL prefix and the depth you set beneath it — nothing else on that host. '+
+    'Links off the prefix are refused and counted, not followed.'));
+  v.append(el('h2',{class:'sec'},'Authorised sources'));
+  if(!DATA.sources.length){
+    v.append(el('div',{class:'empty'},el('b',{},'No sources yet'),
+      'Add one below. It must name the subject it belongs to and how you established that.'));
+  }else{
+    v.append(el('table',{},
+      el('thead',{},el('tr',{},el('th',{},'id'),el('th',{},'subject'),el('th',{},'prefix'),
+        el('th',{},'depth'),el('th',{},'attribution'))),
+      el('tbody',{},DATA.sources.map(s=>el('tr',{},
+        el('td',{class:'mono'},s.id),
+        el('td',{},subjectLabel(s.subject_id)),
+        el('td',{class:'mono'},s.url),
+        el('td',{},String(s.depth)),
+        el('td',{},s.attribution))))));
+  }
+
+  v.append(el('h2',{class:'sec'},'Add a source'));
+  const form=el('div',{style:'max-width:560px'});
+  const subj=el('select',{id:'srcSubject'},...DATA.subjects.map(s=>el('option',{value:s.id},s.label)));
+  form.append(el('label',{},'Subject this source belongs to'),subj);
+
+  form.append(el('label',{},'Identify the source by'));
+  const modeRow=el('div',{class:'row'},
+    el('button',{class:'btn sm on',id:'modeUrl',onclick:()=>setSourceMode('url')},'URL'),
+    el('button',{class:'btn sm',id:'modeHandle',onclick:()=>setSourceMode('handle')},'Handle'));
+  form.append(modeRow);
+
+  const urlBox=el('div',{id:'srcUrlBox'});
+  urlBox.append(el('label',{},'URL prefix'),
+    el('input',{type:'url',id:'srcUrl',placeholder:'https://example.org/users/alice'}));
+  form.append(urlBox);
+
+  const handleBox=el('div',{id:'srcHandleBox',hidden:'hidden'});
+  const platSel=el('select',{id:'srcPlatform',onchange:previewHandle});
+  for(const group of ['open','partial','blocked']){
+    const rows=PLATFORMS.filter(p=>p.collection===group);
+    if(!rows.length) continue;
+    platSel.append(el('optgroup',{label:{
+      open:'Collects well', partial:'Collects partially', blocked:'Authorised, but expect nothing'
+    }[group]},...rows.map(p=>el('option',{value:p.key},p.name))));
+  }
+  handleBox.append(el('label',{},'Platform'),platSel);
+  handleBox.append(el('label',{},'Handle'),
+    el('input',{type:'text',id:'srcHandle',placeholder:'@alice@mastodon.social',oninput:debouncePreview}));
+  handleBox.append(el('div',{id:'srcInstanceBox',hidden:'hidden'},
+    el('label',{},'Instance (federated platforms only)'),
+    el('input',{type:'text',id:'srcInstance',placeholder:'mastodon.social',oninput:debouncePreview})));
+  handleBox.append(el('div',{id:'srcPreview',class:'note',style:'margin:4px 0 10px'},
+    'Enter a handle to see the URL it expands to.'));
+  form.append(handleBox);
+
+  form.append(el('label',{},'How you established it belongs to them'),
+    el('textarea',{id:'srcAttr',placeholder:'Username matches handle in seized message header; profile photo matches exhibit 4.'}));
+  form.append(el('label',{},'Depth beneath the prefix (blank = platform default)'),
+    el('input',{type:'number',id:'srcDepth',placeholder:'1',min:'0',max:'4'}));
+  form.append(el('button',{class:'btn primary',onclick:addSource},'Add source'));
+  v.append(form);
+
+  v.append(el('h2',{class:'sec'},'Test a URL against this case’s scope'));
+  const test=el('div',{class:'row',style:'max-width:560px'});
+  const input=el('input',{type:'url',id:'scopeUrl',placeholder:'https://…',style:'margin:0'});
+  const out=el('span',{id:'scopeOut'});
+  test.append(input,el('button',{class:'btn sm',onclick:async()=>{
+    try{
+      const r=await api(`/api/case/${CASE}/scope?url=${encodeURIComponent(input.value)}`);
+      out.replaceChildren(r.allowed
+        ? el('span',{class:'chip ok'},`in scope via ${r.source_id}`)
+        : el('span',{class:'chip warn'},'out of scope'));
+    }catch(e){ out.replaceChildren(el('span',{class:'chip bad'},e.message)); }
+  }},'Check'),out);
+  v.append(test);
+}
+
+let SOURCE_MODE='url', PREVIEW_TIMER=null;
+
+function setSourceMode(mode){
+  SOURCE_MODE=mode;
+  $('#modeUrl').classList.toggle('on',mode==='url');
+  $('#modeHandle').classList.toggle('on',mode==='handle');
+  $('#srcUrlBox').hidden = mode!=='url';
+  $('#srcHandleBox').hidden = mode!=='handle';
+  if(mode==='handle') previewHandle();
+}
+
+function debouncePreview(){
+  clearTimeout(PREVIEW_TIMER);
+  PREVIEW_TIMER=setTimeout(previewHandle,300);
+}
+
+async function previewHandle(){
+  const box=$('#srcPreview'); if(!box) return;
+  const key=$('#srcPlatform').value;
+  const plat=PLATFORMS.find(p=>p.key===key)||{};
+  $('#srcInstanceBox').hidden = !plat.needs_instance;
+  const handle=$('#srcHandle').value.trim();
+  if(!handle){
+    box.className='note';
+    box.textContent=`Example handle: ${plat.example||''}`;
+    return;
+  }
+  try{
+    const r=await api('/api/platforms/preview',{method:'POST',body:JSON.stringify({
+      subject_id:'x', attribution:'placeholder for preview only',
+      platform:key, handle, instance:$('#srcInstance').value.trim()})});
+    box.className='note'+(r.collection==='blocked'?' bad':(r.collection==='partial'?' warn':''));
+    box.replaceChildren(
+      el('div',{},'Expands to ',el('span',{class:'mono'},r.url)),
+      el('div',{style:'margin-top:6px'},
+        el('span',{class:'chip '+({open:'ok',partial:'warn',blocked:'bad'})[r.collection]},
+          'collects: '+r.collection),' ',r.note));
+  }catch(e){
+    box.className='note bad';
+    box.textContent=e.message;
+  }
+}
+
+async function addSource(){
+  try{
+    const depthRaw=$('#srcDepth').value.trim();
+    const body={
+      subject_id:$('#srcSubject').value,
+      attribution:$('#srcAttr').value,
+      depth: depthRaw===''? -1 : Number(depthRaw),
+    };
+    if(SOURCE_MODE==='handle'){
+      body.platform=$('#srcPlatform').value;
+      body.handle=$('#srcHandle').value.trim();
+      body.instance=$('#srcInstance').value.trim();
+    }else{
+      body.url=$('#srcUrl').value.trim();
+    }
+    const r=await api(`/api/case/${CASE}/sources`,{method:'POST',body:JSON.stringify(body)});
+    if(r.expanded && r.expanded.collection==='blocked'){
+      toast(`Authorised ${r.url} — but ${r.expanded.platform} blocks unauthenticated fetches, so expect little back.`);
+    }
+    DATA=await api(`/api/case/${CASE}`); render();
+  }catch(e){ alert(e.message); }
+}
+
+async function renderGraph(v){
+  const g=await api(`/api/case/${CASE}/graph`);
+  v.replaceChildren();
+  v.append(el('div',{class:'note'},
+    'Who appears in the same photographs as whom, counted once per distinct photograph. '+
+    'This is usually the lead, not the face score.'));
+  if(g.leads.length){
+    v.append(el('h2',{class:'sec'},'Unidentified people seen with enrolled subjects'));
+    v.append(el('table',{},
+      el('thead',{},el('tr',{},el('th',{},'cluster'),el('th',{},'photos'),el('th',{},'appears with'))),
+      el('tbody',{},g.leads.slice(0,25).map(l=>el('tr',{
+          style:'cursor:pointer',onclick:()=>{VIEW='clusters';SELECTED=l.cluster;
+            document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.view==='clusters'));render();}},
+        el('td',{},`#${l.cluster}`),el('td',{},String(l.photos)),
+        el('td',{},Object.entries(l.with_subjects).map(([s,n])=>`${subjectLabel(s)} ×${n}`).join(', ')))))));
+  }
+  v.append(el('h2',{class:'sec'},'Co-occurrence'));
+  if(!g.edges.length){
+    v.append(el('div',{class:'empty'},el('b',{},'No co-occurrences'),
+      'No photograph in the collection contains two clustered faces.'));
+    return;
+  }
+  v.append(el('table',{},
+    el('thead',{},el('tr',{},el('th',{},'person'),el('th',{},'person'),el('th',{},'shared photos'))),
+    el('tbody',{},g.edges.slice(0,60).map(e=>{
+      const na=g.nodes.find(n=>n.cluster===e.a),nb=g.nodes.find(n=>n.cluster===e.b);
+      return el('tr',{},
+        el('td',{},na.subject?subjectLabel(na.subject):`#${e.a}`),
+        el('td',{},nb.subject?subjectLabel(nb.subject):`#${e.b}`),
+        el('td',{},String(e.photos)));
+    }))));
+}
+
+async function renderAudit(v){
+  const a=await api(`/api/case/${CASE}/audit`);
+  v.replaceChildren();
+  v.append(el('div',{class:'note'+(a.chain_ok?'':' bad')},
+    (a.chain_ok?'Hash chain intact. ':'CHAIN BROKEN. ')+a.chain_detail));
+  v.append(el('table',{},
+    el('thead',{},el('tr',{},el('th',{},'time'),el('th',{},'event'),el('th',{},'actor'),el('th',{},'detail'))),
+    el('tbody',{},a.entries.slice().reverse().slice(0,300).map(e=>el('tr',{},
+      el('td',{class:'mono'},e.ts.slice(0,19).replace('T',' ')),
+      el('td',{},e.event),
+      el('td',{},e.actor||''),
+      el('td',{class:'mono'},Object.entries(e.data).map(([k,val])=>`${k}=${JSON.stringify(val)}`).join('  ').slice(0,180)))))));
+}
+
+/* ---------------- pipeline ---------------- */
+async function runCrawl(){
+  try{
+    const {job}=await api(`/api/case/${CASE}/crawl`,{method:'POST',
+      body:JSON.stringify({max_pages:200,max_images:2000,respect_robots:true})});
+    await pollJob(job,'Collecting from authorised sources');
+    await openCase(CASE);
+  }catch(e){ alert(e.message); }
+}
+async function runFaces(){
+  const {job}=await api(`/api/case/${CASE}/faces`,{method:'POST'});
+  await pollJob(job,'Detecting and embedding faces');
+  await openCase(CASE);
+}
+async function runCluster(){
+  const r=await api(`/api/case/${CASE}/cluster`,{method:'POST',body:JSON.stringify({})});
+  toast(`${r.clusters} clusters over ${r.faces} faces`);
+  SELECTED=null; await openCase(CASE);
+}
+async function runMatch(){
+  try{
+    const r=await api(`/api/case/${CASE}/match`,{method:'POST',body:JSON.stringify({})});
+    toast(`${r.matched} matched · ${r.unknown} unknown · ${r.contested} contested`);
+    SELECTED=null; await openCase(CASE);
+  }catch(e){ alert(e.message); }
+}
+async function runReport(){
+  const r=await api(`/api/case/${CASE}/report`,{method:'POST'});
+  toast('Report written to '+r.path);
+}
+
+function pollJob(jobId,title){
+  return new Promise((resolve)=>{
+    const body=$('#modalBody');
+    body.replaceChildren(el('h4',{style:'margin:0 0 10px'},title),
+      el('div',{class:'log',id:'jobLog'}),
+      el('div',{class:'row',style:'margin:14px 0 0'},
+        el('div',{class:'spacer'}),
+        el('button',{class:'btn sm',id:'jobClose',disabled:'disabled',
+          onclick:()=>{$('#modal').close();resolve();}},'Close')));
+    $('#modal').showModal();
+    const tick=async()=>{
+      const j=await api(`/api/job/${jobId}`);
+      const log=$('#jobLog');
+      if(log){
+        log.replaceChildren(...j.lines.slice(-120).map(l=>
+          el('div',{},el('span',{class:'ev '+l.event},l.event),l.detail)));
+        log.scrollTop=log.scrollHeight;
+      }
+      if(j.state==='running'){ setTimeout(tick,700); return; }
+      if(j.state==='error') log.append(el('div',{class:'failed'},j.error));
+      $('#jobClose').disabled=false;
+    };
+    tick();
+  });
+}
+
+function toast(msg){
+  const t=el('div',{style:`position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:11px 18px;
+    box-shadow:var(--shadow);z-index:99`},msg);
+  document.body.append(t); setTimeout(()=>t.remove(),4200);
+}
+const truncate=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
+
+/* ---------------- modals ---------------- */
+function showNewCase(){
+  $('#modalBody').replaceChildren(
+    el('h4',{style:'margin:0 0 4px'},'New case'),
+    el('p',{style:'margin:0 0 14px;color:var(--ink-3);font-size:12.5px'},
+      'The authorisation is enforced: collection stops once it expires.'),
+    el('label',{},'Case handle'),el('input',{type:'text',id:'ncId',placeholder:'op-fieldmouse'}),
+    el('label',{},'Title'),el('input',{type:'text',id:'ncTitle'}),
+    el('label',{},'Authorisation holder'),el('input',{type:'text',id:'ncHolder'}),
+    el('label',{},'Instrument reference'),el('input',{type:'text',id:'ncInst',placeholder:'warrant / engagement / approval no.'}),
+    el('label',{},'Expires'),el('input',{type:'date',id:'ncExp'}),
+    el('label',{},'Scope note'),el('textarea',{id:'ncNote'}),
+    el('div',{class:'row',style:'margin:6px 0 0'},
+      el('div',{class:'spacer'}),
+      el('button',{class:'btn sm',onclick:()=>$('#modal').close()},'Cancel'),
+      el('button',{class:'btn primary sm',onclick:createCase},'Create')));
+  $('#modal').showModal();
+}
+async function createCase(){
+  try{
+    const r=await api('/api/cases',{method:'POST',body:JSON.stringify({
+      id:$('#ncId').value,title:$('#ncTitle').value,holder:$('#ncHolder').value,
+      instrument:$('#ncInst').value,expires:$('#ncExp').value,scope_note:$('#ncNote').value})});
+    $('#modal').close(); await loadCases(); await openCase(r.id);
+    if(r.warning) toast(r.warning);
+  }catch(e){ alert(e.message); }
+}
+function showNewSubject(){
+  $('#modalBody').replaceChildren(
+    el('h4',{style:'margin:0 0 4px'},'Enrol subject'),
+    el('p',{style:'margin:0 0 14px;color:var(--ink-3);font-size:12.5px'},
+      'Add reference images from the command line: casework subject ref <case> <subject> <image>'),
+    el('label',{},'Subject id'),el('input',{type:'text',id:'nsId'}),
+    el('label',{},'Label'),el('input',{type:'text',id:'nsLabel'}),
+    el('label',{},'Note'),el('textarea',{id:'nsNote'}),
+    el('div',{class:'row',style:'margin:6px 0 0'},
+      el('div',{class:'spacer'}),
+      el('button',{class:'btn sm',onclick:()=>$('#modal').close()},'Cancel'),
+      el('button',{class:'btn primary sm',onclick:createSubject},'Enrol')));
+  $('#modal').showModal();
+}
+async function createSubject(){
+  try{
+    await api(`/api/case/${CASE}/subjects`,{method:'POST',body:JSON.stringify({
+      id:$('#nsId').value,label:$('#nsLabel').value,note:$('#nsNote').value})});
+    $('#modal').close(); await openCase(CASE);
+  }catch(e){ alert(e.message); }
+}
+
+/* ---------------- boot ---------------- */
+(async()=>{
+  try{ PLATFORMS = await api('/api/platforms'); }catch{}
+  await loadCases();
+  const hash=location.hash.slice(1);
+  if(hash) try{ await openCase(hash); }catch{}
+})();
+</script>
+</body>
+</html>
